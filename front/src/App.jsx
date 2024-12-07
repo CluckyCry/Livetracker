@@ -42,8 +42,6 @@ export default function App() {
     setRoutes(json.routes);
   }
 
-  //console.log(routes);
-
   // request the server (only once)
   useEffect(() => {
     requestServer();
@@ -63,23 +61,22 @@ export default function App() {
         {routes &&
           routes.map((route, index) => {
             // this is the actual bus data (bData)
-            const { start_location, end_location, start, end } = route;
-            return (
-              <div>
-                <Marker
-                  icon={startIcon}
-                  position={[start_location.latitude, end_location.longitude]}
-                >
-                  <Popup>{start}</Popup>
-                </Marker>
-                <Marker
-                  icon={stopIcon}
-                  position={[end_location.latitude, end_location.longitude]}
-                >
-                  <Popup>{end}</Popup>
-                </Marker>
-              </div>
-            );
+            const { start, end, waypoints } = route;
+            const markers = []
+            for (let i = 1; i<(waypoints.length - 1); i++) {
+              markers.push(
+                <Marker key={i} position={waypoints[i]}></Marker>
+              )
+            }
+            return <div key={index}>
+              <Marker icon={startIcon} position={waypoints[0]}>
+                <Popup>{start}</Popup>
+              </Marker>
+              <Marker icon={stopIcon} position={waypoints[waypoints.length-1]}>
+                <Popup>{end}</Popup>
+              </Marker>
+              {markers}
+            </div>
           })}
       </MapContainer>
     </div>

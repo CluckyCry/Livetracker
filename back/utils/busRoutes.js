@@ -162,7 +162,7 @@ export function getRoutes() {
     const waypoints = generateWaypoints(
       [startLocation.latitude, startLocation.longitude],
       [end_location.latitude, end_location.longitude],
-      10
+      11
     );
     routes[index] = { ...routes[index], waypoints };
   });
