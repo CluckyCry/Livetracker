@@ -1,3 +1,4 @@
+const EARTH_RADIUS = 6371e3; // Earth radius in meters
 const routes = [
   {
     id: 1,
@@ -113,21 +114,58 @@ const routes = [
   },
 ];
 
+function generateWaypoints(start, end, numWaypoints) {
+  const [lat1, lon1] = start.map((coord) => (coord * Math.PI) / 180); // Convert to radians
+  const [lat2, lon2] = end.map((coord) => (coord * Math.PI) / 180);
+
+  // Calculate the angular distance between the two points
+  const dLon = lon2 - lon1;
+  const dLat = lat2 - lat1;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLon / 2) ** 2;
+  const angularDistance = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+  // Total distance in meters
+  const totalDistance = angularDistance * EARTH_RADIUS;
+
+  // Generate waypoints at equal intervals
+  const waypoints = [];
+  for (let i = 0; i <= numWaypoints; i++) {
+    const fraction = i / numWaypoints; // Fraction of the distance
+    const A =
+      Math.sin((1 - fraction) * angularDistance) / Math.sin(angularDistance);
+    const B = Math.sin(fraction * angularDistance) / Math.sin(angularDistance);
+
+    const x =
+      A * Math.cos(lat1) * Math.cos(lon1) + B * Math.cos(lat2) * Math.cos(lon2);
+    const y =
+      A * Math.cos(lat1) * Math.sin(lon1) + B * Math.cos(lat2) * Math.sin(lon2);
+    const z = A * Math.sin(lat1) + B * Math.sin(lat2);
+
+    const waypointLat =
+      Math.atan2(z, Math.sqrt(x ** 2 + y ** 2)) * (180 / Math.PI);
+    const waypointLon = Math.atan2(y, x) * (180 / Math.PI);
+
+    waypoints.push([waypointLat, waypointLon]);
+  }
+
+  return waypoints;
+}
+
 export function getRoutes() {
+  routes.forEach((route, index) => {
+    const startLocation = route.start_location;
+    const end_location = route.end_location;
+
+    const waypoints = generateWaypoints(
+      [startLocation.latitude, startLocation.longitude],
+      [end_location.latitude, end_location.longitude],
+      10
+    );
+    routes[index] = { ...routes[index], waypoints };
+  });
+
   return routes;
 }
-
-/*
-export function initializeBus(busId, startCoords, stopCoords){
-    busData[busId] = {
-        startingPoint: startCoords,
-        endingPoint: stopCoords,
-        currentLocation: startCoords
-    }
-}
-
-export function updateBusData(busId, updatedProperty) {
-  const bData = busData[busId]; // Accessing the data of the specific bus.
-  busData[busId] = { ...bData, updatedProperty };
-}
-  */
